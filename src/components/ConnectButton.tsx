@@ -22,7 +22,8 @@ export function ConnectButton() {
     );
   }
 
-  const cb = connectors.find((c) => c.id === "coinbaseWalletSDK") ?? connectors[0];
+  // Предпочитаем Base Account (smart wallet), иначе — любой доступный коннектор.
+  const cb = connectors.find((c) => c.id === "baseAccount") ?? connectors[0];
 
   return (
     <button

@@ -1,15 +1,17 @@
 import { http, createConfig } from "wagmi";
 import { base } from "wagmi/chains";
-import { coinbaseWallet, injected } from "wagmi/connectors";
+import { baseAccount, injected } from "wagmi/connectors";
 import { BASE_RPC_URL } from "@/lib/constants";
 
 // Конфиг wagmi: только Base mainnet.
-// Кошелёк подключается на клиенте; приватный ключ владельца НИКОГДА не в коде.
+// Стек по актуальной доке Base: wagmi + viem + @base-org/account (коннектор baseAccount).
+// Farcaster/MiniKit не используются — с 9 апреля 2026 Base App считает апки обычными веб-апками.
+// Приватный ключ владельца НИКОГДА не в коде — подпись только в кошельке.
 export const wagmiConfig = createConfig({
   chains: [base],
   connectors: [
-    coinbaseWallet({ appName: "Bomzh", preference: "all" }),
-    injected(),
+    baseAccount({ appName: "Фармодрочка" }), // Base Account (smart wallet)
+    injected(), // обычные EOA-кошельки (Rabby/MetaMask)
   ],
   transports: {
     [base.id]: http(BASE_RPC_URL),

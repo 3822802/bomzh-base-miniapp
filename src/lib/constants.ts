@@ -43,9 +43,12 @@ export const B20_FACTORY =
 export const ACTIVATION_REGISTRY =
   "0x8453000000000000000000000000000000000001" as const;
 
-// Адреса собственных контрактов — заполнить после деплоя (Фаза B/C)
+// Адреса собственных контрактов — заполняются по мере деплоя (Фаза B/C)
 export const CONTRACTS = {
-  token: "" as `0x${string}` | "", // B20 Bomzh (Remix)
+  // B20 Bomzh (BMZH), создан через обёртку в Remix
+  token: "0xB200000000000000000000873a5F3745D420D7C9" as `0x${string}` | "",
+  // Обёртка-фабрика B20 (деплой Remix) — для истории/верификации
+  tokenFactory: "0x477Eb694f91E058B68dd6Bb3E303d91917196e52" as `0x${string}` | "",
   sale: "" as `0x${string}` | "", // sale-контракт (фикс-цена)
   roulette: "" as `0x${string}` | "", // рулетка (4 тира)
   nft: "" as `0x${string}` | "", // NFT-контракт (4 тира)

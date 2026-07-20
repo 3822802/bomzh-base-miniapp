@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Claude Code local settings (personal, contains bypassPermissions)
 .claude/settings.local.json
+
+# но пример env — коммитим (без секретов)
+!.env.local.example

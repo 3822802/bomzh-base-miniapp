@@ -45,3 +45,6 @@ next-env.d.ts
 
 # но пример env — коммитим (без секретов)
 !.env.local.example
+
+# токен Base MCP (локальная разработка)
+.mcp-token.json

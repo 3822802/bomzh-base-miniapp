@@ -53,13 +53,13 @@ export const CONTRACTS = {
   token: "0xB200000000000000000000873a5F3745D420D7C9" as `0x${string}` | "",
   // Обёртка-фабрика B20 (деплой Remix) — для истории/верификации
   tokenFactory: "0x477Eb694f91E058B68dd6Bb3E303d91917196e52" as `0x${string}` | "",
-  sale: "" as `0x${string}` | "", // sale-контракт (фикс-цена)
-  roulette: "" as `0x${string}` | "", // BomzhRoulette — прокрут за BMZH
+  sale: "0x362e59F89b46C685AD47CE76e4399EDBF1a09273" as `0x${string}` | "",
+  roulette: "0x87e546A90E5a0E69048068f08c433679BE25643a" as `0x${string}` | "",
   // Четыре отдельных контракта призов (BomzhPrizeNFT), у каждого своя картинка
-  prize1: "" as `0x${string}` | "",
-  prize2: "" as `0x${string}` | "",
-  prize3: "" as `0x${string}` | "",
-  prize4: "" as `0x${string}` | "",
+  prize1: "0x5933dd22E94095BCa20E7E045D119a70e64315ba" as `0x${string}` | "", // Кофе
+  prize2: "0xD436dc7d443B5408B88B4DFd9c57697099818113" as `0x${string}` | "", // Суши
+  prize3: "0xa3dbCc441D267b20695218413aBaEe96a6528D69" as `0x${string}` | "",
+  prize4: "0xBA35B3F48a6887050A3149C00DBf6237FACf93d6" as `0x${string}` | "", // Подарок от бывшей
 } as const;
 
 /// Названия призов — для интерфейса (арт зальём позже)

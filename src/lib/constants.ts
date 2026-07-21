@@ -50,9 +50,12 @@ export const CONTRACTS = {
   // Обёртка-фабрика B20 (деплой Remix) — для истории/верификации
   tokenFactory: "0x477Eb694f91E058B68dd6Bb3E303d91917196e52" as `0x${string}` | "",
   sale: "" as `0x${string}` | "", // sale-контракт (фикс-цена)
-  care: "" as `0x${string}` | "", // BomzhCare — кормление/стрик
-  badge: "" as `0x${string}` | "", // BomzhBadge — бейджи (1-й день, 5 дней)
+  roulette: "" as `0x${string}` | "", // BomzhRoulette — прокрут за BMZH
+  nft: "" as `0x${string}` | "", // BomzhNFT — 4 тира
 } as const;
+
+/// Стоимость одного прокрута рулетки (должна совпадать с spinCost в контракте)
+export const SPIN_COST_BMZH = 10n * 10n ** 18n;
 
 // x402: живой бесключевой сервис на Base mainnet ($0.001 USDC за вызов).
 // Агент дёргает его как ПОКУПАТЕЛЬ — ключи и фасилитатор с нашей стороны не нужны.

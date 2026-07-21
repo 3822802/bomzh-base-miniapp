@@ -11,7 +11,7 @@ export const SALE_ABI = [
   },
 ] as const;
 
-// B20/ERC-20 совместимый минимум: баланс + approve для кормления.
+// B20/ERC-20 совместимый минимум: баланс + approve для прокрута.
 export const ERC20_ABI = [
   {
     type: "function",
@@ -42,36 +42,41 @@ export const ERC20_ABI = [
   },
 ] as const;
 
-export const CARE_ABI = [
-  { type: "function", name: "feed", stateMutability: "nonpayable", inputs: [], outputs: [] },
+export const ROULETTE_ABI = [
   {
     type: "function",
-    name: "feedCost",
-    stateMutability: "view",
+    name: "spin",
+    stateMutability: "nonpayable",
     inputs: [],
+    outputs: [
+      { name: "tier", type: "uint8" },
+      { name: "tokenId", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "nextTier",
+    stateMutability: "view",
+    inputs: [{ name: "player", type: "address" }],
+    outputs: [{ type: "uint8" }],
+  },
+  {
+    type: "function",
+    name: "spinsOf",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
     outputs: [{ type: "uint256" }],
   },
   {
     type: "function",
-    name: "canFeed",
+    name: "spinCost",
     stateMutability: "view",
-    inputs: [{ name: "user", type: "address" }],
-    outputs: [{ type: "bool" }],
-  },
-  {
-    type: "function",
-    name: "stateOf",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "address" }],
-    outputs: [
-      { name: "lastDay", type: "uint64" },
-      { name: "streak", type: "uint32" },
-      { name: "totalFeeds", type: "uint32" },
-    ],
+    inputs: [],
+    outputs: [{ type: "uint256" }],
   },
 ] as const;
 
-export const BADGE_ABI = [
+export const NFT_ABI = [
   {
     type: "function",
     name: "balanceOf",

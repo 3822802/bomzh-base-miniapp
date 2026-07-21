@@ -9,16 +9,9 @@ export const SALE_ABI = [
     inputs: [{ name: "ethWei", type: "uint256" }],
     outputs: [{ name: "tokensOut", type: "uint256" }],
   },
-  {
-    type: "function",
-    name: "PRICE_WEI_PER_TOKEN",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint256" }],
-  },
 ] as const;
 
-// B20/ERC-20 совместимый минимум для чтения баланса/символа.
+// B20/ERC-20 совместимый минимум: баланс + approve для кормления.
 export const ERC20_ABI = [
   {
     type: "function",
@@ -29,30 +22,61 @@ export const ERC20_ABI = [
   },
   {
     type: "function",
-    name: "symbol",
+    name: "allowance",
     stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "string" }],
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
   },
   {
     type: "function",
-    name: "decimals",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint8" }],
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
   },
 ] as const;
 
-export const ROULETTE_ABI = [
+export const CARE_ABI = [
+  { type: "function", name: "feed", stateMutability: "nonpayable", inputs: [], outputs: [] },
   {
     type: "function",
-    name: "spin",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "tier", type: "uint8" },
-      { name: "nonce", type: "uint256" },
-      { name: "signature", type: "bytes" },
+    name: "feedCost",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "canFeed",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "stateOf",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [
+      { name: "lastDay", type: "uint64" },
+      { name: "streak", type: "uint32" },
+      { name: "totalFeeds", type: "uint32" },
     ],
-    outputs: [{ name: "tokenId", type: "uint256" }],
+  },
+] as const;
+
+export const BADGE_ABI = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ type: "uint256" }],
   },
 ] as const;

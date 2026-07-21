@@ -50,6 +50,11 @@ export const CONTRACTS = {
   // Обёртка-фабрика B20 (деплой Remix) — для истории/верификации
   tokenFactory: "0x477Eb694f91E058B68dd6Bb3E303d91917196e52" as `0x${string}` | "",
   sale: "" as `0x${string}` | "", // sale-контракт (фикс-цена)
-  roulette: "" as `0x${string}` | "", // рулетка (4 тира)
-  nft: "" as `0x${string}` | "", // NFT-контракт (4 тира)
+  care: "" as `0x${string}` | "", // BomzhCare — кормление/стрик
+  badge: "" as `0x${string}` | "", // BomzhBadge — бейджи (1-й день, 5 дней)
 } as const;
+
+// x402: живой бесключевой сервис на Base mainnet ($0.001 USDC за вызов).
+// Агент дёргает его как ПОКУПАТЕЛЬ — ключи и фасилитатор с нашей стороны не нужны.
+export const X402_ENDPOINT =
+  "https://x402-api.fly.dev/api/price-feed" as const;

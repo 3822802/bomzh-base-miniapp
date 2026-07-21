@@ -7,10 +7,8 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { formatUnits } from "viem";
-import { CONTRACTS, BUILDER_DATA_SUFFIX, TOKEN } from "@/lib/constants";
-import { ROULETTE_ABI, ERC20_ABI, NFT_ABI } from "@/lib/abis";
-
-const TIER_NAMES = ["", "Картонка", "Ватник", "Тележка", "Золотой бомж"];
+import { CONTRACTS, BUILDER_DATA_SUFFIX, TOKEN, PRIZE_NAMES } from "@/lib/constants";
+import { ROULETTE_ABI, ERC20_ABI } from "@/lib/abis";
 
 // Экран 2 — Рулетка. Крутишь за BMZH, выпадает следующий не собранный тир,
 // собрал все 4 — круг начинается заново. Минт NFT происходит внутри spin().
@@ -21,12 +19,11 @@ export function RouletteScreen() {
 
   const roulette = CONTRACTS.roulette;
   const token = CONTRACTS.token;
-  const nft = CONTRACTS.nft;
 
-  const { data: nextTier } = useReadContract({
+  const { data: nextPrize } = useReadContract({
     address: roulette ? (roulette as `0x${string}`) : undefined,
     abi: ROULETTE_ABI,
-    functionName: "nextTier",
+    functionName: "nextPrize",
     args: address ? [address] : undefined,
     query: { enabled: !!roulette && !!address },
   });
@@ -46,12 +43,12 @@ export function RouletteScreen() {
     query: { enabled: !!token && !!roulette && !!address },
   });
 
-  const { data: nftCount } = useReadContract({
-    address: nft ? (nft as `0x${string}`) : undefined,
-    abi: NFT_ABI,
-    functionName: "balanceOf",
+  const { data: spins } = useReadContract({
+    address: roulette ? (roulette as `0x${string}`) : undefined,
+    abi: ROULETTE_ABI,
+    functionName: "spinsOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!nft && !!address },
+    query: { enabled: !!roulette && !!address },
   });
 
   const needsApprove =
@@ -81,7 +78,7 @@ export function RouletteScreen() {
     });
   }
 
-  const tier = nextTier !== undefined ? Number(nextTier) : 0;
+  const prize = nextPrize !== undefined ? Number(nextPrize) : 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -89,11 +86,11 @@ export function RouletteScreen() {
         <div className="text-5xl">🎰</div>
         <div className="mt-3 text-sm text-white/60">Следующий выпадет</div>
         <div className="text-lg font-bold text-yellow-300">
-          {tier > 0 ? `Тир ${tier} — ${TIER_NAMES[tier]}` : "—"}
+          {prize > 0 ? `Приз ${prize} — ${PRIZE_NAMES[prize]}` : "—"}
         </div>
-        {nftCount !== undefined && (
+        {spins !== undefined && (
           <div className="mt-2 text-xs text-white/50">
-            NFT собрано: <b className="text-white/80">{String(nftCount)}</b>
+            Прокрутов: <b className="text-white/80">{String(spins)}</b>
           </div>
         )}
       </div>
@@ -103,7 +100,7 @@ export function RouletteScreen() {
         {spinCost !== undefined
           ? formatUnits(spinCost as bigint, TOKEN.decimals)
           : "—"}{" "}
-        {TOKEN.symbol}. Тиры идут по кругу 1 → 2 → 3 → 4.
+        {TOKEN.symbol}. Призы идут по кругу 1 → 2 → 3 → 4.
       </p>
 
       <button

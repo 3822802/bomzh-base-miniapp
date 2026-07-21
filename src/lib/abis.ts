@@ -49,13 +49,13 @@ export const ROULETTE_ABI = [
     stateMutability: "nonpayable",
     inputs: [],
     outputs: [
-      { name: "tier", type: "uint8" },
+      { name: "prize", type: "uint8" },
       { name: "tokenId", type: "uint256" },
     ],
   },
   {
     type: "function",
-    name: "nextTier",
+    name: "nextPrize",
     stateMutability: "view",
     inputs: [{ name: "player", type: "address" }],
     outputs: [{ type: "uint8" }],

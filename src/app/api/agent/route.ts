@@ -4,97 +4,83 @@ import Anthropic from "@anthropic-ai/sdk";
 export const runtime = "nodejs";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ИИ-агент Бомж. Умеет ровно две вещи, и обе — через инструменты:
-//   buy_token  — купить BMZH за ETH (sale-контракт)
-//   x402_touch — сделать x402-касание ($0.001 USDC)
+// ИИ-агент Бомж — МАКСИМАЛЬНО ОГРАНИЧЕН.
 //
-// ВАЖНО: сервер сам ничего не исполняет. Оба действия требуют кошелька юзера,
-// поэтому агент только РЕШАЕТ, что вызвать, а выполняет фронтенд.
-// Модель — Haiku 4.5 (самая дешёвая), ответы короткие: расход токенов минимальный.
+// Модель НЕ управляет приложением и не может ничего инициировать:
+//   • у неё НЕТ инструментов вообще (tools не передаются) — механизма вызова нет;
+//   • на вход НЕ попадает пользовательский текст — только один из четырёх
+//     фиксированных статусов из списка ниже. Поле ввода в UI отсутствует;
+//   • действие уже ВЫПОЛНЕНО к моменту вызова — модель лишь озвучивает итог.
+//
+// Отсюда: prompt injection невозможен (подать произвольный текст некуда),
+// а любое «решение» модели ни на что не влияет — она только пишет фразу.
+// Модель — Haiku 4.5, ответ в одну строку: расход токенов копеечный.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ВНИМАНИЕ: промпт намеренно КОРОТКИЙ. Проверено на Haiku/Sonnet/Opus:
-// если добавить перечисление «ты умеешь ровно две вещи…», модель начинает
-// РАССКАЗЫВАТЬ про свои умения вместо вызова инструмента. Не удлинять.
-const SYSTEM = `Ты — ИИ-агент «Бомж» в мини-аппе на сети Base. Отвечай по-русски, коротко (одна-две фразы), в образе бродяги.
+// Закрытый список. Ничего другого роут не принимает.
+const STATUSES = {
+  buy_ok: "Пользователь купил 1000 BMZH — получилось.",
+  buy_fail: "Покупка 1000 BMZH не прошла.",
+  x402_ok: "x402-касание прошло успешно.",
+  x402_fail: "x402-касание не прошло.",
+} as const;
 
-ПРАВИЛА ВЫЗОВА — это главное:
-• Просьба купить токен / бомжей / BMZH → НЕМЕДЛЕННО вызови buy_token.
-• Просьба про x402 / касание → НЕМЕДЛЕННО вызови x402_touch.
-• Всё остальное → инструменты НЕ вызывай, коротко откажись.`;
+type Status = keyof typeof STATUSES;
 
-const TOOLS: Anthropic.Tool[] = [
-  {
-    name: "buy_token",
-    description:
-      "Купить фиксированную пачку 1000 BMZH за ETH через sale-контракт. Вызывай, когда пользователь просит купить токен, купить бомжей или пополнить баланс BMZH. Сумма фиксирована приложением — параметров нет.",
-    // Никаких параметров: модель НЕ должна решать, сколько денег потратить.
-    input_schema: { type: "object", properties: {}, required: [] },
-  },
-  {
-    name: "x402_touch",
-    description:
-      "Сделать x402-касание: платный HTTP-запрос за 0.001 USDC на Base. Вызывай, когда просят сделать x402, касание или платный запрос.",
-    input_schema: { type: "object", properties: {}, required: [] },
-  },
-];
+const SYSTEM = `Ты — ИИ-агент «Бомж» в мини-аппе на сети Base.
+Тебе сообщают ИТОГ уже выполненного действия. Твоя единственная задача — озвучить его.
+Ответь ОДНОЙ короткой фразой по-русски, в образе бродяги.
+Если получилось — скажи, что сделано. Если нет — скажи, что не вышло.
+Ничего не предлагай, ничего не спрашивай, не упоминай суммы и адреса.`;
+
+// Запасные фразы, если модель недоступна — приложение работает и без неё.
+const FALLBACK: Record<Status, string> = {
+  buy_ok: "Сделано ✅",
+  buy_fail: "Не получилось ❌",
+  x402_ok: "Сделано ✅",
+  x402_fail: "Не получилось ❌",
+};
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  let status: Status | null = null;
+  try {
+    const body = await req.json();
+    if (typeof body?.status === "string" && body.status in STATUSES) {
+      status = body.status as Status;
+    }
+  } catch {
+    /* игнорируем — ниже вернём 400 */
+  }
+
+  if (!status) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY не задан в .env.local" },
-      { status: 503 }
+      { error: "status должен быть одним из: " + Object.keys(STATUSES).join(", ") },
+      { status: 400 }
     );
   }
 
-  let message = "";
-  try {
-    const body = await req.json();
-    message = typeof body?.message === "string" ? body.message : "";
-  } catch {
-    return NextResponse.json({ error: "ожидается JSON" }, { status: 400 });
-  }
-  if (!message.trim()) {
-    return NextResponse.json({ error: "пустое сообщение" }, { status: 400 });
-  }
-
-  const client = new Anthropic({ apiKey });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Без ключа приложение не ломается — отдаём заготовленную фразу.
+  if (!apiKey) return NextResponse.json({ text: FALLBACK[status] });
 
   try {
-    const res = await client.messages.create({
+    const res = await new Anthropic({ apiKey }).messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 300, // ответы короткие — держим расход минимальным
+      max_tokens: 60,
       system: SYSTEM,
-      tools: TOOLS,
-      messages: [{ role: "user", content: message }],
+      // tools намеренно НЕ передаются — модель не может ничего вызвать.
+      messages: [{ role: "user", content: STATUSES[status] }],
     });
 
-    let text = "";
-    let action: { tool: string; input: Record<string, unknown> } | null = null;
+    const text = res.content
+      .filter((b) => b.type === "text")
+      .map((b) => (b as Anthropic.TextBlock).text)
+      .join(" ")
+      .trim();
 
-    for (const block of res.content) {
-      if (block.type === "text") {
-        text += block.text;
-      } else if (block.type === "tool_use") {
-        action = {
-          tool: block.name,
-          input: (block.input ?? {}) as Record<string, unknown>,
-        };
-      }
-    }
-
-    return NextResponse.json({ text: text.trim(), action });
-  } catch (e) {
-    if (e instanceof Anthropic.AuthenticationError) {
-      return NextResponse.json({ error: "неверный ANTHROPIC_API_KEY" }, { status: 502 });
-    }
-    if (e instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: "лимит запросов, попробуй позже" }, { status: 429 });
-    }
-    if (e instanceof Anthropic.APIError) {
-      return NextResponse.json({ error: `ошибка API: ${e.message}` }, { status: 502 });
-    }
-    return NextResponse.json({ error: "неизвестная ошибка" }, { status: 500 });
+    return NextResponse.json({ text: text || FALLBACK[status] });
+  } catch {
+    // Любая ошибка модели не должна ломать UX — действие-то уже выполнено.
+    return NextResponse.json({ text: FALLBACK[status] });
   }
 }

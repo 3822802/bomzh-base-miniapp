@@ -55,8 +55,15 @@ export const CONTRACTS = {
   tokenFactory: "0x477Eb694f91E058B68dd6Bb3E303d91917196e52" as `0x${string}` | "",
   sale: "" as `0x${string}` | "", // sale-контракт (фикс-цена)
   roulette: "" as `0x${string}` | "", // BomzhRoulette — прокрут за BMZH
-  nft: "" as `0x${string}` | "", // BomzhNFT — 4 тира
+  // Четыре отдельных контракта призов (BomzhPrizeNFT), у каждого своя картинка
+  prize1: "" as `0x${string}` | "",
+  prize2: "" as `0x${string}` | "",
+  prize3: "" as `0x${string}` | "",
+  prize4: "" as `0x${string}` | "",
 } as const;
+
+/// Названия призов — для интерфейса (арт зальём позже)
+export const PRIZE_NAMES = ["", "Картонка", "Ватник", "Тележка", "Золотой бомж"] as const;
 
 /// Стоимость одного прокрута рулетки (должна совпадать с spinCost в контракте)
 export const SPIN_COST_BMZH = 10n * 10n ** 18n;

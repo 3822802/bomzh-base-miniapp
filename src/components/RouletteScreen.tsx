@@ -7,7 +7,7 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { formatUnits } from "viem";
-import { CONTRACTS, BUILDER_DATA_SUFFIX, TOKEN, PRIZE_NAMES } from "@/lib/constants";
+import { CONTRACTS, BUILDER_DATA_SUFFIX, TOKEN, PRIZE_NAMES, GAS } from "@/lib/constants";
 import { ROULETTE_ABI, ERC20_ABI } from "@/lib/abis";
 
 // Экран 2 — Рулетка. Крутишь за BMZH, выпадает следующий не собранный тир,
@@ -66,6 +66,7 @@ export function RouletteScreen() {
         abi: ERC20_ABI,
         functionName: "approve",
         args: [roulette as `0x${string}`, (spinCost as bigint) * 100n], // запас на 100 прокрутов
+        gas: GAS.approve, // явный лимит: BMZH — прекомпайл, кошельки его занижают
         dataSuffix: BUILDER_DATA_SUFFIX,
       });
       return;
@@ -74,6 +75,7 @@ export function RouletteScreen() {
       address: roulette as `0x${string}`,
       abi: ROULETTE_ABI,
       functionName: "spin",
+      gas: GAS.spin, // transferFrom по прекомпайлу + минт NFT
       dataSuffix: BUILDER_DATA_SUFFIX, // атрибуция билдера
     });
   }

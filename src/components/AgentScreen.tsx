@@ -10,6 +10,7 @@ import {
   TOKEN,
   X402_ENDPOINT,
   BUY_PAYMENT_WEI,
+  GAS,
 } from "@/lib/constants";
 import { SALE_ABI } from "@/lib/abis";
 
@@ -56,6 +57,7 @@ export function AgentScreen() {
         abi: SALE_ABI,
         functionName: "buy",
         value: BUY_PAYMENT_WEI,
+        gas: GAS.buy, // явный лимит: BMZH — прекомпайл, кошельки его занижают
         dataSuffix: BUILDER_DATA_SUFFIX, // атрибуция билдера
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });

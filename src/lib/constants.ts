@@ -31,8 +31,12 @@ export const TOKEN = {
   supplyCap: 1_000_000n * 10n ** 18n,
 } as const;
 
-// Sale-контракт: фикс-цена ~0.0000001 ETH за 1 BMZH
-export const SALE_PRICE_ETH_PER_BMZH = "0.0000001" as const;
+// Sale-контракт: 1 BMZH = 1 gwei (1e9 wei).
+// Покупка фиксированная: 1000 BMZH = 1e12 wei = 0.000001 ETH (микрокопейки).
+// 1000 BMZH хватает на 100 прокрутов рулетки (по 10 BMZH).
+// ВАЖНО: сумму задаёт приложение, а НЕ ИИ-агент.
+export const BUY_TOKENS_AMOUNT = 1000n * 10n ** 18n; // 1000 BMZH
+export const BUY_PAYMENT_WEI = 10n ** 12n; // 0.000001 ETH
 
 // x402-гейт на спин рулетки: $0.02 USDC (получатель — OWNER_ADDRESS)
 export const SPIN_PRICE_USDC = "0.02" as const;

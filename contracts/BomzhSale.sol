@@ -2,12 +2,13 @@
 pragma solidity ^0.8.20;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BomzhSale — sale-контракт с ФИКС-ценой для кнопки «Купить» (агент Бомж).
-// Продаёт BMZH по ~0.0000001 ETH за 1 токен. ETH-выручка идёт владельцу.
-// Контракт предзаливается частью supply BMZH (владелец переводит на его адрес).
-// См. PROJECT_Bomzh_full.md ЧАСТЬ 0 и Фаза C, шаг 7.
+// BomzhSale — продажа BMZH по фикс-цене за ETH.
 //
-// Токен BMZH (B20 ASSET) для перевода ведёт себя как ERC-20 — хватает transfer.
+// Цена: 1 BMZH = 1 gwei (1e9 wei).
+// Минимальная покупка: 1000 BMZH = 1e12 wei = 0.000001 ETH (микрокопейки).
+// 1000 BMZH = 100 прокрутов рулетки (по 10 BMZH) — с запасом на все действия.
+//
+// ETH-выручка сразу уходит владельцу; контракт предзаливается частью supply BMZH.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface IERC20 {
@@ -16,18 +17,21 @@ interface IERC20 {
 }
 
 contract BomzhSale {
-    // Токен и получатель выручки задаются при деплое.
     IERC20 public immutable token;
-    address public immutable owner; // получатель ETH-выручки (кошелёк владельца)
+    address public immutable owner; // получатель ETH-выручки
 
-    // Цена: 0.0000001 ETH за 1 BMZH (целый токен = 1e18 юнитов).
-    // 0.0000001 ETH = 1e11 wei за 1e18 юнитов BMZH.
-    uint256 public constant PRICE_WEI_PER_TOKEN = 1e11;
+    /// @notice Цена одного целого BMZH в wei (1 gwei).
+    uint256 public constant PRICE_WEI_PER_TOKEN = 1e9;
+
+    /// @notice Минимальная покупка — 1000 BMZH.
+    uint256 public constant MIN_TOKENS = 1000 ether; // 1000 * 1e18
+    /// @notice Соответствующий минимальный платёж = 1000 * 1e9 = 1e12 wei.
+    uint256 public constant MIN_PAYMENT = 1e12;
 
     event Bought(address indexed buyer, uint256 ethIn, uint256 tokensOut);
     event Swept(address indexed to, uint256 tokensOut);
 
-    error ZeroValue();
+    error BelowMinimum(uint256 sent, uint256 required);
     error InsufficientStock(uint256 requested, uint256 available);
     error PayoutFailed();
     error NotOwner();
@@ -37,16 +41,15 @@ contract BomzhSale {
         owner = owner_;
     }
 
-    /// @notice Купить BMZH за ETH. Кол-во токенов считается от суммы ETH.
+    /// @notice Купить BMZH за ETH. Минимум — 1000 BMZH (0.000001 ETH).
     /// tokensOut(юниты) = msg.value * 1e18 / PRICE_WEI_PER_TOKEN.
     function buy() external payable {
-        if (msg.value == 0) revert ZeroValue();
+        if (msg.value < MIN_PAYMENT) revert BelowMinimum(msg.value, MIN_PAYMENT);
 
         uint256 tokensOut = (msg.value * 1e18) / PRICE_WEI_PER_TOKEN;
         uint256 stock = token.balanceOf(address(this));
         if (tokensOut > stock) revert InsufficientStock(tokensOut, stock);
 
-        // ETH-выручку сразу пересылаем владельцу (контракт не копит ETH).
         (bool ok, ) = owner.call{value: msg.value}("");
         if (!ok) revert PayoutFailed();
 
@@ -62,7 +65,7 @@ contract BomzhSale {
         emit Swept(owner, bal);
     }
 
-    /// @notice Предпросмотр: сколько BMZH дадут за указанный ETH (в wei).
+    /// @notice Сколько BMZH дадут за указанный ETH (в wei).
     function quote(uint256 ethWei) external pure returns (uint256 tokensOut) {
         return (ethWei * 1e18) / PRICE_WEI_PER_TOKEN;
     }

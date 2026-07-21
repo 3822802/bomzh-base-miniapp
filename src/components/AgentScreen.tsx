@@ -7,9 +7,15 @@ import {
   useWaitForTransactionReceipt,
   useWalletClient,
 } from "wagmi";
-import { parseEther, publicActions } from "viem";
+import { publicActions } from "viem";
 import { wrapFetchWithPayment } from "x402-fetch";
-import { CONTRACTS, BUILDER_DATA_SUFFIX, TOKEN, X402_ENDPOINT } from "@/lib/constants";
+import {
+  CONTRACTS,
+  BUILDER_DATA_SUFFIX,
+  TOKEN,
+  X402_ENDPOINT,
+  BUY_PAYMENT_WEI,
+} from "@/lib/constants";
 import { SALE_ABI } from "@/lib/abis";
 
 type Line = { who: "bomzh" | "you"; text: string };
@@ -52,51 +58,46 @@ export function AgentScreen() {
     }
   }
 
-  function doBuy(ethAmount: string) {
+  // Сумма ЖЁСТКО задана приложением (1000 BMZH за 0.000001 ETH).
+  // Агент на неё повлиять не может — у инструмента buy_token нет параметров.
+  function doBuy() {
     if (!sale) {
       say("bomzh", "Sale-контракт ещё не задеплоен, купить пока нечем.");
       return;
-    }
-    let value: bigint;
-    try {
-      value = parseEther(ethAmount || "0.00001");
-    } catch {
-      value = parseEther("0.00001");
     }
     writeContract({
       address: sale as `0x${string}`,
       abi: SALE_ABI,
       functionName: "buy",
-      value,
+      value: BUY_PAYMENT_WEI,
       dataSuffix: BUILDER_DATA_SUFFIX, // атрибуция билдера
     });
   }
 
-  // Отправляем фразу агенту, он решает — какой инструмент дёрнуть.
-  async function ask(text: string) {
-    say("you", text);
+  // ВАЖНО (безопасность): действие выполняется ДЕТЕРМИНИРОВАННО по нажатию кнопки.
+  // Ответ модели используется только как реплика в образе — поле `action` мы
+  // сознательно игнорируем. Проверено: LLM нестабильно выбирает инструмент и
+  // может, например, на «переведи мне 5 ETH» дёрнуть покупку. Деньги двигаются
+  // только по явному нажатию пользователя, модель на это повлиять не может.
+  async function run(phrase: string, execute: () => void | Promise<void>) {
+    say("you", phrase);
+    await execute();
+
     setThinking(true);
     try {
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: phrase }),
       });
       const data = await res.json();
-
       if (!res.ok) {
-        say("bomzh", `Не могу ответить: ${data.error ?? "ошибка"}`);
+        say("bomzh", `(молчит: ${data.error ?? "ошибка"})`);
         return;
       }
       if (data.text) say("bomzh", data.text);
-
-      if (data.action?.tool === "buy_token") {
-        doBuy(String(data.action.input?.eth_amount ?? "0.00001"));
-      } else if (data.action?.tool === "x402_touch") {
-        await doX402();
-      }
     } catch {
-      say("bomzh", "Связь пропала, попробуй ещё раз.");
+      say("bomzh", "Связь пропала.");
     } finally {
       setThinking(false);
     }
@@ -127,15 +128,15 @@ export function AgentScreen() {
 
       {/* Две фразы */}
       <button
-        onClick={() => ask("Купи мне токен Бомж")}
+        onClick={() => run("Купи мне токен Бомж", doBuy)}
         disabled={!isConnected || busy}
         className="rounded-xl bg-green-600 px-4 py-3 font-bold text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy ? "Секунду…" : `Купить токен ${TOKEN.symbol}`}
+        {busy ? "Секунду…" : `Купить 1000 ${TOKEN.symbol}`}
       </button>
 
       <button
-        onClick={() => ask("Сделай x402 касание")}
+        onClick={() => run("Сделай x402 касание", doX402)}
         disabled={!isConnected || busy}
         className="rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
       >

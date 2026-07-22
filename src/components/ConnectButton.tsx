@@ -11,8 +11,8 @@ function short(addr: string) {
 // Понятные подписи для тех коннекторов, чьё имя ничего не говорит.
 const LABELS: Record<string, string> = {
   baseAccount: "BASE ACCOUNT (PASSKEY)",
-  coinbaseWalletSDK: "COINBASE WALLET",
-  injected: "КОШЕЛЁК В БРАУЗЕРЕ",
+  metaMaskSDK: "METAMASK",
+  injected: "БРАУЗЕРНЫЙ КОШЕЛЁК",
 };
 
 export function ConnectButton() {
@@ -48,19 +48,19 @@ export function ConnectButton() {
     );
   }
 
-  // Расширения, найденные через EIP-6963, идут первыми — это то, чем человек
-  // реально пользуется. Общий injected показываем, только если ничего не нашлось,
-  // иначе он дублирует уже найденный кошелёк.
+  // Порядок: сначала расширения, найденные через EIP-6963 (Rabby, MetaMask и
+  // прочие — со своими именами и иконками), затем явные варианты.
+  // Дедуп по имени: если MetaMask уже нашёлся сам, отдельный пункт не нужен.
   const discovered = connectors.filter(
     (c) => c.type === "injected" && c.id !== "injected"
   );
-  const rest = connectors.filter(
-    (c) => c.type !== "injected" && c.id !== "injected"
-  );
-  const fallback = discovered.length
-    ? []
-    : connectors.filter((c) => c.id === "injected");
-  const list = [...discovered, ...fallback, ...rest];
+  const seen = new Set(discovered.map((c) => c.name.toLowerCase()));
+  const order = ["metaMaskSDK", "injected", "baseAccount"];
+  const explicit = order
+    .map((id) => connectors.find((c) => c.id === id))
+    .filter((c): c is NonNullable<typeof c> => !!c)
+    .filter((c) => c.id === "injected" || !seen.has(c.name.toLowerCase()));
+  const list = [...discovered, ...explicit];
 
   return (
     <>

@@ -48,11 +48,18 @@ export function Celebration({
           ELIGIBLE!
         </p>
 
-        <div className="nes-frame mx-auto mt-3 h-[130px] w-[130px] bg-contain bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${pr.img})` }}
-        />
+        {/* Картинки призов — тёмные объекты на прозрачном фоне с мягкими
+            краями после вырезания. На чёрной подложке они сливались, а остатки
+            фона читались как разводы. Поэтому кладём их на белое поле —
+            так же, как на колесе, где кружки под миниатюрами белые. */}
+        <div className="nes-frame mx-auto mt-3 w-[150px] bg-white p-2">
+          <div
+            className="aspect-square w-full bg-contain bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${pr.img})` }}
+          />
+        </div>
 
-        <p className="mt-3 text-[8px] leading-5">{pr.name}</p>
+        <p className="mt-3 text-[9px] leading-5 text-[#ffd93b]">{pr.name}</p>
         <p className="mt-1 text-[7px] leading-4 text-white/60">
           NFT УЖЕ В КОШЕЛЬКЕ
         </p>

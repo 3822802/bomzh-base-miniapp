@@ -43,6 +43,9 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
   const [busy, setBusy] = useState(false);
   const [reply, setReply] = useState<string | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
+  // Пояснение, которое висит ПОКА идёт действие: кошелёк в этот момент может
+  // показать пугающее предупреждение, и человек должен понимать, что это норма.
+  const [notice, setNotice] = useState<string | null>(null);
 
   // Спрашиваем у агента фразу по закрытому статусу.
   async function phrase(status: Status): Promise<string> {
@@ -83,6 +86,8 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
   // x402-касание: платим $0.001 USDC кошельком пользователя.
   // Сервер сам диктует актив (USDC) и схему exact — она построена на
   // EIP-3009 transferWithAuthorization, то есть работает только с ERC-20.
+  // Ходим через свой /api/x402 — прямой запрос на чужой домен рвался
+  // с «Failed to fetch» уже ПОСЛЕ успешной подписи.
   async function x402(): Promise<boolean> {
     await ensureBase();
     // Берём клиент ПОСЛЕ переключения сети: хук ещё отдал бы старый,
@@ -92,15 +97,24 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
     const signer = wc.extend(publicActions) as unknown as Parameters<
       typeof wrapFetchWithPayment
     >[1];
-    const res = await wrapFetchWithPayment(fetch, signer)(X402_ENDPOINT);
-    if (!res.ok) throw new Error(`сервер ответил ${res.status}`);
+    const res = await wrapFetchWithPayment(fetch, signer)("/api/x402");
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`сервер ответил ${res.status} ${body.slice(0, 60)}`);
+    }
     return true;
   }
 
-  async function run(action: () => Promise<boolean>, ok: Status, fail: Status) {
+  async function run(
+    action: () => Promise<boolean>,
+    ok: Status,
+    fail: Status,
+    warn?: string
+  ) {
     setBusy(true);
     setReply(null);
     setDetail(null);
+    setNotice(warn ?? null);
     try {
       const done = await action();
       setReply(await phrase(done ? ok : fail));
@@ -109,6 +123,7 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
       setReply(await phrase(fail));
       setDetail(reason(e));
     }
+    setNotice(null);
     setBusy(false);
   }
 
@@ -125,6 +140,11 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
             ? "Секунду, работаю…"
             : reply ??
               "Привет! я искусственный интеллект который поможет тебе разбогатеть"}
+          {notice && busy && (
+            <div className="mt-2 text-[7px] leading-4 text-[#ffd93b]">
+              {notice}
+            </div>
+          )}
           {detail && !busy && (
             <div className="mt-1 text-[7px] leading-4 text-[#ff9a9a]">
               ({detail})
@@ -157,7 +177,14 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
             <span className="nes-caret">▶</span> КУПИТЬ BMZH- B20
           </button>
           <button
-            onClick={() => run(x402, "x402_ok", "x402_fail")}
+            onClick={() =>
+              run(
+                x402,
+                "x402_ok",
+                "x402_fail",
+                "Кошелёк покажет красное предупреждение: получатель — обычный адрес (EOA). Так и должно быть: это счёт сервиса x402. Списывается ровно $0.001 USDC, разрешение разовое."
+              )
+            }
             disabled={locked}
             className="nes-menu-item"
           >

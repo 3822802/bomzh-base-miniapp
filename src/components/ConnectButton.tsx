@@ -1,36 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from "wagmi";
+import { base } from "wagmi/chains";
 
 function short(addr: string) {
   return `${addr.slice(0, 5)}…${addr.slice(-3)}`;
 }
 
-// Подписи коннекторов. Base Account создаёт СВОЙ адрес (smart wallet) —
-// это не тот же кошелёк, что в расширении. Поэтому выбор всегда за
-// пользователем, иначе легко подключиться не тем адресом.
+// Понятные подписи для тех коннекторов, чьё имя ничего не говорит.
 const LABELS: Record<string, string> = {
-  baseAccount: "BASE ACCOUNT",
-  injected: "РАСШИРЕНИЕ",
+  baseAccount: "BASE ACCOUNT (PASSKEY)",
+  coinbaseWalletSDK: "COINBASE WALLET",
+  injected: "КОШЕЛЁК В БРАУЗЕРЕ",
 };
 
 export function ConnectButton() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const [open, setOpen] = useState(false);
 
   const cls =
     "nes-btn !px-3 !py-2 shrink-0 text-[7px] leading-4 whitespace-nowrap";
 
   if (isConnected && address) {
+    // Не та сеть — самая частая причина «ничего не работает». Показываем прямо
+    // в шапке и чиним одним нажатием.
+    if (chainId !== base.id) {
+      return (
+        <button
+          onClick={() => switchChain({ chainId: base.id })}
+          className={`${cls} nes-btn-red`}
+        >
+          НЕ ТА СЕТЬ
+          <br />
+          ВКЛЮЧИТЬ BASE
+        </button>
+      );
+    }
     return (
       <button onClick={() => disconnect()} className={`${cls} nes-btn-green`}>
         {short(address)}
       </button>
     );
   }
+
+  // Расширения, найденные через EIP-6963, идут первыми — это то, чем человек
+  // реально пользуется. Общий injected показываем, только если ничего не нашлось,
+  // иначе он дублирует уже найденный кошелёк.
+  const discovered = connectors.filter(
+    (c) => c.type === "injected" && c.id !== "injected"
+  );
+  const rest = connectors.filter(
+    (c) => c.type !== "injected" && c.id !== "injected"
+  );
+  const fallback = discovered.length
+    ? []
+    : connectors.filter((c) => c.id === "injected");
+  const list = [...discovered, ...fallback, ...rest];
 
   return (
     <>
@@ -57,19 +87,24 @@ export function ConnectButton() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="nes-box w-full max-w-[300px] text-[8px]"
+            className="nes-box max-h-[80dvh] w-full max-w-[300px] overflow-y-auto text-[8px]"
           >
             <p className="mb-2 leading-5">ЧЕМ ПОДКЛЮЧИТЬСЯ?</p>
-            {connectors.map((c) => (
+            {list.map((c) => (
               <button
                 key={c.uid}
                 onClick={() => {
-                  connect({ connector: c });
+                  connect({ connector: c, chainId: base.id });
                   setOpen(false);
                 }}
                 className="nes-menu-item"
               >
-                <span className="nes-caret">▶</span>
+                {c.icon ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.icon} alt="" className="h-4 w-4 shrink-0" />
+                ) : (
+                  <span className="nes-caret">▶</span>
+                )}
                 {LABELS[c.id] ?? c.name.toUpperCase()}
               </button>
             ))}

@@ -27,7 +27,7 @@
 
 /* Диалоговое окно NES: чёрный фон, белая рамка, чёрный контур */
 .nes-box {
-  background: #000;
+  background-color: #000; /* не шорткат — см. пояснение у .nes-frame */
   border: 4px solid #fff;
   outline: 4px solid #000;
   color: #fff;
@@ -35,11 +35,15 @@
   line-height: 1.9;
 }
 
-/* Рамка вокруг картинки */
+/* Рамка вокруг картинки.
+   ВАЖНО: только background-color, без сокращённой записи `background`.
+   Шорткат сбрасывает background-size/repeat, и утилиты Tailwind
+   (bg-contain, bg-no-repeat) переставали работать — картинка внутри рамки
+   показывалась в натуральную величину, то есть виден был только её угол. */
 .nes-frame {
   border: 5px solid #fff;
   outline: 5px solid #000;
-  background: #000;
+  background-color: #000;
   display: block;
 }
 
@@ -67,7 +71,7 @@
 
 /* Небо с облаками */
 .nes-sky {
-  background: var(--sky);
+  background-color: var(--sky);
   position: relative;
   overflow: hidden;
 }
@@ -120,6 +124,44 @@
   width: 12px;
   flex: none;
   color: #ffd93b;
+}
+
+/* ── Хлопушка после прокрута ─────────────────────────────────────────── */
+
+/* Одна бумажка конфетти: падает сверху и кувыркается. */
+.nes-confetti {
+  position: absolute;
+  top: -24px;
+  border-radius: 1px;
+  animation-name: nes-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  pointer-events: none;
+}
+@keyframes nes-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0.9;
+  }
+}
+
+/* Заголовок «выпрыгивает» один раз при появлении */
+.nes-pop {
+  animation: nes-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+@keyframes nes-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Тем, кто просил меньше движения, показываем всё статично. */
+@media (prefers-reduced-motion: reduce) {
+  .nes-confetti { display: none; }
+  .nes-pop { animation: none; }
 }
 
 /* Большая кнопка-карточка с картинкой-подложкой */

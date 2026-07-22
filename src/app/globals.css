@@ -11,7 +11,15 @@ body {
   overscroll-behavior: none; /* без «резинки» во встроенном браузере кошелька */
 }
 
-button {
-  font: inherit;
-  color: inherit;
+/* ВАЖНО: правила лежат в слое base.
+   Нелауерные правила по каскаду сильнее ЛЮБОГО слоя, в том числе utilities.
+   Пока этот блок был вне слоя, `font: inherit` перебивал text-[10px] и все
+   кнопки рисовались размером 16px — крупнее остального интерфейса.
+   И только font-family, а не шорткат `font`: шорткат заодно задаёт
+   font-size и снова отнял бы его у утилит. */
+@layer base {
+  button {
+    font-family: inherit;
+    color: inherit;
+  }
 }

@@ -156,9 +156,10 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
             кадр виден целиком и без чёрных полей по краям рамки. */}
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <div
-            className="nes-frame w-full max-w-[290px] bg-contain bg-center bg-no-repeat"
-            // Пропорции — инлайном: утилита aspect-[…] с дробью не собралась,
-            // а от неё зависит, не схлопнется ли рамка в полоску.
+            className="nes-frame w-full bg-contain bg-center bg-no-repeat"
+            // Ширина — как у чёрных диалогов сверху и снизу, без своего
+            // ограничения. Пропорции инлайном: утилита aspect-[…] с дробью
+            // не собралась, а от неё зависит, не схлопнется ли рамка в полоску.
             style={{
               backgroundImage: "url(/img/agent.png)",
               aspectRatio: "1032 / 617",

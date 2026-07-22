@@ -10,7 +10,7 @@ import { BASE_RPC_URL } from "@/lib/constants";
 export const wagmiConfig = createConfig({
   chains: [base],
   connectors: [
-    baseAccount({ appName: "Фармодрочка" }), // Base Account (smart wallet)
+    baseAccount({ appName: "Аирдроп Хантер" }), // Base Account (smart wallet)
     injected(), // обычные EOA-кошельки (Rabby/MetaMask)
   ],
   transports: {

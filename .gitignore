@@ -48,3 +48,12 @@ next-env.d.ts
 
 # токен Base MCP (локальная разработка)
 .mcp-token.json
+
+# Внутренние документы проекта — держим локально, в публичный репозиторий не отдаём
+PROJECT_Bomzh_full.md
+CLAUDE.md
+AGENTS.md
+.claude/
+contracts/DEPLOY_GUIDE.md
+contracts/README_REMIX.md
+public/nft/README.md

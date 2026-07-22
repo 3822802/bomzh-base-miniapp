@@ -74,6 +74,19 @@ export const ROULETTE_ABI = [
     inputs: [],
     outputs: [{ type: "uint256" }],
   },
+  // Итог прокрута. Приз берём ИМЕННО отсюда: это то, что реально сминтилось,
+  // а не то, что успел отдать кэшированный nextPrize до отправки транзакции.
+  {
+    type: "event",
+    name: "Spun",
+    inputs: [
+      { name: "player", type: "address", indexed: true },
+      { name: "prize", type: "uint8", indexed: false },
+      { name: "nft", type: "address", indexed: false },
+      { name: "tokenId", type: "uint256", indexed: false },
+      { name: "cost", type: "uint256", indexed: false },
+    ],
+  },
 ] as const;
 
 export const NFT_ABI = [

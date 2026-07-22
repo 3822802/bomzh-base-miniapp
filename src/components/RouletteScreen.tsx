@@ -8,7 +8,7 @@ import {
   usePublicClient,
 } from "wagmi";
 import { base } from "wagmi/chains";
-import { formatUnits } from "viem";
+import { formatUnits, parseEventLogs } from "viem";
 import { Header } from "./Header";
 import { Wheel, LAYOUT, STEP } from "./Wheel";
 import { Celebration } from "./Celebration";
@@ -73,9 +73,8 @@ export function RouletteScreen({ onBack }: { onBack: () => void }) {
     setStep(null);
     setWon(null);
 
-    // Приз фиксируем ДО отправки: после спина контракт уже покажет следующий,
-    // а крутить надо на тот, что реально выпал.
-    const prize = nextPrize !== undefined ? Number(nextPrize) : 1;
+    // Запасное значение на случай, если событие не удалось разобрать.
+    const ожидаемый = nextPrize !== undefined ? Number(nextPrize) : 1;
 
     try {
       await ensureBase();
@@ -114,6 +113,17 @@ export function RouletteScreen({ onBack }: { onBack: () => void }) {
       setStep("ЖДЁМ СЕТЬ…");
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== "success") throw new Error("reverted");
+
+      // ПРИЗ БЕРЁМ ИЗ СОБЫТИЯ, а не из nextPrize.
+      // nextPrize читался заранее и кэшируется wagmi: если узел отставал
+      // на блок, кэш возвращал прошлое значение и колесо останавливалось
+      // не на том призе, который реально сминтился. Событие Spun — это факт.
+      const spun = parseEventLogs({
+        abi: ROULETTE_ABI,
+        eventName: "Spun",
+        logs: receipt.logs,
+      })[0];
+      const prize = spun ? Number(spun.args.prize) : ожидаемый;
 
       // Крутим на выпавший сектор. TIER 1 занимает пять слотов — берём любой.
       const seats = LAYOUT.map((p, i) => (p === prize ? i : -1)).filter((i) => i >= 0);

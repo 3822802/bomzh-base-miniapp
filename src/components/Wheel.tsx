@@ -8,18 +8,12 @@
 // из контракта, поэтому колесо всегда останавливается на правде.
 // ───────────────────────────────────────────────────────────────────────────
 
-// img   — сама NFT: объект целиком, как его увидят в кошельке и на маркете.
-// thumb — необязательный вариант ДЛЯ КРУЖКА на колесе.
-//         Кружок маленький и круглый, поэтому вытянутый объект (TIER 1 —
-//         пропорции 1:2.6) занимал в нём всего 20% против 98-100% у круглых
-//         кофе и суши и попросту терялся. Для колеса берём укрупнённый кадр
-//         с узнаваемой верхушкой; полную картинку это не трогает.
 export const PRIZES = [
-  { id: 1, name: "TIER 1", img: "/nft/1.png", thumb: "/nft/1-thumb.png", color: "#f5d76e" },
+  { id: 1, name: "TIER 1", img: "/nft/1.png", color: "#f5d76e" },
   { id: 2, name: "TIER 2", img: "/nft/2.png", color: "#9fd8f5" },
   { id: 3, name: "TIER 3", img: "/nft/3.png", color: "#8fd88f" },
   { id: 4, name: "ПОДАРОК ОТ БЫВШЕЙ", img: "/nft/4.png", color: "#f4a3a3" },
-] as { id: number; name: string; img: string; thumb?: string; color: string }[];
+];
 
 // Раскладка секторов: TIER 1 — пять раз, остальные по одному.
 export const LAYOUT = [1, 2, 1, 3, 1, 4, 1, 1];
@@ -104,7 +98,7 @@ export function Wheel({ rot, spinning }: { rot: number; spinning: boolean }) {
               strokeWidth="2.5"
             />
             <image
-              href={pr.thumb ?? pr.img}
+              href={pr.img}
               x={p.x - 30}
               y={p.y - 30}
               width="60"

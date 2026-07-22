@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useAccount, useWriteContract, usePublicClient, useWalletClient } from "wagmi";
 import { publicActions } from "viem";
 import { wrapFetchWithPayment } from "x402-fetch";
+import { Header } from "./Header";
 import {
   CONTRACTS,
   BUILDER_DATA_SUFFIX,
-  TOKEN,
   X402_ENDPOINT,
   BUY_PAYMENT_WEI,
   GAS,
@@ -16,10 +16,10 @@ import { SALE_ABI } from "@/lib/abis";
 
 type Status = "buy_ok" | "buy_fail" | "x402_ok" | "x402_fail";
 
-// Экран агента. Ровно две кнопки, поля ввода нет.
+// Экран ФАРМ. Ровно два действия, поля ввода нет.
 // Действия выполняются кодом детерминированно; ИИ-агент только озвучивает итог
 // (у модели нет инструментов и она не получает пользовательский текст).
-export function AgentScreen() {
+export function AgentScreen({ onBack }: { onBack: () => void }) {
   const { isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
@@ -41,10 +41,10 @@ export function AgentScreen() {
       return typeof data.text === "string" && data.text
         ? data.text
         : status.endsWith("_ok")
-        ? "Сделано ✅"
-        : "Не получилось ❌";
+        ? "Сделано!"
+        : "Не получилось.";
     } catch {
-      return status.endsWith("_ok") ? "Сделано ✅" : "Не получилось ❌";
+      return status.endsWith("_ok") ? "Сделано!" : "Не получилось.";
     }
   }
 
@@ -81,51 +81,62 @@ export function AgentScreen() {
     }
   }
 
-  async function run(action: () => Promise<boolean>, okStatus: Status, failStatus: Status) {
+  async function run(action: () => Promise<boolean>, ok: Status, fail: Status) {
     setBusy(true);
     setReply(null);
-    const ok = await action();
-    setReply(await phrase(ok ? okStatus : failStatus));
+    const done = await action();
+    setReply(await phrase(done ? ok : fail));
     setBusy(false);
   }
 
+  const locked = !isConnected || busy;
+
   return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-white/15 bg-white/5 p-4 text-center">
-        <div className="text-3xl">🧔</div>
-        <div className="mt-1 text-sm font-semibold text-yellow-300">ИИ-агент Бомж</div>
-        <p className="mt-1 text-xs text-white/50">Умеет ровно две вещи.</p>
-      </div>
+    <div className="flex h-full flex-col bg-[#7b7bef]">
+      <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+        <Header />
 
-      <button
-        onClick={() => run(buy, "buy_ok", "buy_fail")}
-        disabled={!sale || !isConnected || busy}
-        title={!sale ? "Sale-контракт ещё не задеплоен" : undefined}
-        className="rounded-xl bg-green-600 px-4 py-4 font-bold text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {busy ? "Секунду…" : `Купить 1000 ${TOKEN.symbol}`}
-      </button>
-
-      <button
-        onClick={() => run(x402, "x402_ok", "x402_fail")}
-        disabled={!isConnected || busy}
-        className="rounded-xl bg-blue-600 px-4 py-4 font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {busy ? "Секунду…" : "x402"}
-      </button>
-
-      {reply && (
-        <div className="rounded-xl border border-white/15 bg-white/5 p-3 text-center">
-          <span className="text-sm text-yellow-300">🧔 </span>
-          <span className="text-sm text-white/85">{reply}</span>
+        {/* Реплика агента */}
+        <div className="nes-box shrink-0 text-[8px]">
+          {busy
+            ? "Секунду, работаю…"
+            : reply ??
+              "Привет! я искусственный интеллект который поможет тебе разбогатеть"}
         </div>
-      )}
 
-      {!sale && (
-        <p className="text-center text-xs text-white/40">
-          Покупка оживёт после деплоя sale-контракта.
-        </p>
-      )}
+        {/* Картинка агента */}
+        <div
+          className="nes-frame mx-auto w-full max-w-[290px] min-h-[110px] flex-1 bg-cover bg-center"
+          style={{ backgroundImage: "url(/img/agent.png)" }}
+        />
+
+        {/* Меню. Ровно три пункта — ничего другого агент делать не умеет. */}
+        <div className="nes-box shrink-0 text-[8px]">
+          <button
+            onClick={() => run(buy, "buy_ok", "buy_fail")}
+            disabled={locked || !sale}
+            className="nes-menu-item"
+          >
+            <span className="nes-caret">▶</span> КУПИТЬ BMZH- B20
+          </button>
+          <button
+            onClick={() => run(x402, "x402_ok", "x402_fail")}
+            disabled={locked}
+            className="nes-menu-item"
+          >
+            <span className="nes-caret">▶</span> КОСНУТЬСЯ X402
+          </button>
+          <button onClick={onBack} disabled={busy} className="nes-menu-item">
+            <span className="nes-caret">▶</span> НАЗАД
+          </button>
+        </div>
+
+        {!isConnected && (
+          <p className="shrink-0 text-center text-[7px] leading-4 text-white [text-shadow:2px_2px_0_#000]">
+            СНАЧАЛА ПОДКЛЮЧИ КОШЕЛЁК
+          </p>
+        )}
+      </main>
     </div>
   );
 }

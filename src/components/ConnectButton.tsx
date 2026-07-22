@@ -3,7 +3,7 @@
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 
 function short(addr: string) {
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  return `${addr.slice(0, 5)}…${addr.slice(-3)}`;
 }
 
 export function ConnectButton() {
@@ -11,12 +11,12 @@ export function ConnectButton() {
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
 
+  const cls =
+    "nes-btn !px-3 !py-2 shrink-0 text-[7px] leading-4 whitespace-nowrap";
+
   if (isConnected && address) {
     return (
-      <button
-        onClick={() => disconnect()}
-        className="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-mono hover:bg-white/10"
-      >
+      <button onClick={() => disconnect()} className={`${cls} nes-btn-green`}>
         {short(address)}
       </button>
     );
@@ -29,9 +29,17 @@ export function ConnectButton() {
     <button
       onClick={() => cb && connect({ connector: cb })}
       disabled={isPending || !cb}
-      className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+      className={`${cls} nes-btn-blue disabled:opacity-60`}
     >
-      {isPending ? "Подключение…" : "Подключить кошелёк"}
+      {isPending ? (
+        "СЕКУНДУ…"
+      ) : (
+        <>
+          ПОДКЛЮЧИТЬ
+          <br />
+          КОШЕЛЁК
+        </>
+      )}
     </button>
   );
 }

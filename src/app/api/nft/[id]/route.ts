@@ -5,21 +5,25 @@ import { NextRequest, NextResponse } from "next/server";
 // IPFS не нужен. Название приза можно поменять здесь в любой момент,
 // в отличие от имени контракта, которое зашито ончейн навсегда.
 
-const PRIZES: Record<string, { name: string; description: string }> = {
+const PRIZES: Record<string, { name: string; tier: string; description: string }> = {
   "1": {
-    name: "Кофе",
-    description: "Стакан бодрости от бомжа. Греет руки и душу.",
+    name: "TIER 1",
+    tier: "Bronze",
+    description: "Базовый тир Аирдроп Хантера. С него начинают все.",
   },
   "2": {
-    name: "Суши",
-    description: "Роскошь по меркам подворотни. Бомж одобряет.",
+    name: "TIER 2",
+    tier: "Silver",
+    description: "Второй тир. Уже не новичок.",
   },
   "3": {
-    name: "Приз бомжа",
-    description: "Тот самый третий приз.",
+    name: "TIER 3",
+    tier: "Gold",
+    description: "Третий тир. Редкая находка.",
   },
   "4": {
-    name: "Подарок от бывшей",
+    name: "ПОДАРОК ОТ БЫВШЕЙ",
+    tier: "Special",
     description: "Лучше бы не открывал.",
   },
 };
@@ -40,7 +44,10 @@ export async function GET(
       name: prize.name,
       description: prize.description,
       image: `${req.nextUrl.origin}/nft/${id}.png`,
-      attributes: [{ trait_type: "Приз", value: prize.name }],
+      attributes: [
+        { trait_type: "Tier", value: prize.tier },
+        { trait_type: "Приз", value: prize.name },
+      ],
     },
     { headers: { "cache-control": "public, max-age=300" } }
   );

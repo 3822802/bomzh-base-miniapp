@@ -62,8 +62,16 @@ export const CONTRACTS = {
   prize4: "0xBA35B3F48a6887050A3149C00DBf6237FACf93d6" as `0x${string}` | "", // Подарок от бывшей
 } as const;
 
-/// Названия призов — для интерфейса (арт зальём позже)
-export const PRIZE_NAMES = ["", "Картонка", "Ватник", "Тележка", "Золотой бомж"] as const;
+/// Названия призов — для интерфейса. Индекс = номер приза в контракте (1..4).
+/// Те же названия дублируются в src/components/Wheel.tsx (подписи секторов)
+/// и в src/app/api/nft/[id]/route.ts (метаданные NFT).
+export const PRIZE_NAMES = [
+  "",
+  "TIER 1",
+  "TIER 2",
+  "TIER 3",
+  "ПОДАРОК ОТ БЫВШЕЙ",
+] as const;
 
 /// Стоимость одного прокрута рулетки (должна совпадать с spinCost в контракте)
 export const SPIN_COST_BMZH = 10n * 10n ** 18n;

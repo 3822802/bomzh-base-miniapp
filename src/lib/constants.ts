@@ -10,13 +10,14 @@ export const OWNER_ADDRESS =
 
 export const BASENAME = "40m04u.base.eth" as const;
 
-// Builder-код — атрибуция билдера. Идёт в:
+// Builder-код ЭТОЙ апки (Аирдроп Хантер) — атрибуция билдера. Идёт в:
 // • регистрацию апки на Base.dev (поле builder code)
-// • манифест/конфиг MiniKit
 // • dataSuffix у onchain-вызовов (хвост калдаты для атрибуции)
-export const BUILDER_CODE = "bc_3kvzpilt" as const;
+// ВАЖНО: это код именно НОВОЙ апки. Раньше по ошибке стоял код bc_3kvzpilt
+// от другой апки, и статистика транзакций уходила в тот, старый кабинет.
+export const BUILDER_CODE = "bc_892znyoo" as const;
 export const BUILDER_DATA_SUFFIX =
-  "0x62635f336b767a70696c740b0080218021802180218021802180218021" as const;
+  "0x62635f3839327a6e796f6f0b0080218021802180218021802180218021" as const;
 
 // Сеть Base mainnet
 export const BASE_CHAIN_ID = 8453 as const;

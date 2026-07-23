@@ -46,9 +46,6 @@ next-env.d.ts
 # но пример env — коммитим (без секретов)
 !.env.local.example
 
-# токен Base MCP (локальная разработка)
-.mcp-token.json
-
 # Внутренние документы проекта — держим локально, в публичный репозиторий не отдаём
 PROJECT_Bomzh_full.md
 CLAUDE.md

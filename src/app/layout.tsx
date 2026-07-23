@@ -13,10 +13,12 @@ const press = Press_Start_2P({
 });
 
 // Подтверждение владения доменом на Base.dev делается мета-тегом
-// <meta name="base:app_id" content="...">. ID выдаётся в окне «Add Domain»
-// в кабинете Base.dev — кладём его в переменную NEXT_PUBLIC_BASE_APP_ID.
-// Пока переменная не задана — тег просто не выводится.
-const BASE_APP_ID = process.env.NEXT_PUBLIC_BASE_APP_ID;
+// <meta name="base:app_id" content="...">. ID выдан в окне «Add Domain»
+// в кабинете Base.dev. Это публичный идентификатор для подтверждения домена,
+// не секрет — можно держать прямо в коде. Переменная окружения, если задана,
+// перекрывает значение (на случай смены домена/ID без правки кода).
+const BASE_APP_ID =
+  process.env.NEXT_PUBLIC_BASE_APP_ID ?? "6a61df15426d14cfbad57a59";
 
 export const metadata: Metadata = {
   title: "Аирдроп Хантер",

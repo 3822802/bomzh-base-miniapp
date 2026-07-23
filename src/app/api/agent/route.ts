@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,12 @@ const FALLBACK: Record<Status, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  // Защита платного ключа Anthropic: каждый вызов маршрута — платный запрос
+  // к модели. 20 обращений в минуту с одного IP хватает живому человеку
+  // (кнопок всего две) и рубит автоматический флуд.
+  const limited = rateLimit(req, "agent", 20, 60_000);
+  if (limited) return limited;
+
   let status: Status | null = null;
   try {
     const body = await req.json();

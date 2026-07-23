@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { X402_ENDPOINT } from "@/lib/constants";
+import { rateLimit } from "@/lib/ratelimit";
 
 // Прозрачный прокси к x402-эндпоинту.
 //
@@ -39,12 +40,17 @@ async function forward(payment: string | null) {
 }
 
 export async function GET(req: NextRequest) {
+  // Не даём гонять свой сервер как безымянный релей к апстриму.
+  const limited = rateLimit(req, "x402", 30, 60_000);
+  if (limited) return limited;
+
   try {
     return await forward(req.headers.get("x-payment"));
   } catch (e) {
-    // Отдаём внятную причину вместо пустого «Failed to fetch».
+    // Наружу — общая причина; подробности пишем только в лог сервера.
+    console.error("x402 upstream error:", e);
     return NextResponse.json(
-      { error: "x402 upstream недоступен", detail: String(e).slice(0, 200) },
+      { error: "x402 upstream недоступен" },
       { status: 502 }
     );
   }

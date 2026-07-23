@@ -58,10 +58,24 @@ export async function GET(req: NextRequest) {
   return page("Base MCP подключён. Можно закрывать вкладку.", true);
 }
 
+// Экранируем всё, что попадает в HTML: часть сообщений содержит значения
+// из query (?error=…), иначе — отражённый XSS на нашем origin.
+function esc(s: string) {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)
+  );
+}
+
 function page(msg: string, ok: boolean) {
   return new NextResponse(
     `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;background:#111;color:#eee;padding:40px">
-     <h2>${ok ? "✅" : "❌"} ${msg}</h2></body>`,
-    { status: ok ? 200 : 400, headers: { "content-type": "text/html; charset=utf-8" } }
+     <h2>${ok ? "✅" : "❌"} ${esc(msg)}</h2></body>`,
+    {
+      status: ok ? 200 : 400,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
+      },
+    }
   );
 }

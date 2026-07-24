@@ -34,8 +34,13 @@ function reason(e: unknown): string {
     return "подпись просрочена — нажми ещё раз";
   if (m.includes("nonce") || m.includes("already used"))
     return "подпись уже использована — нажми ещё раз";
-  if (m.includes("signature") || m.includes("invalid"))
-    return "кошелёк подписал в формате, который сервис не принял";
+  // Один и тот же адрес подписывает по-разному в зависимости от кошелька:
+  // обычный кошелёк (MetaMask/Rabby) даёт классическую подпись, которую сервис
+  // принимает, а встроенный кошелёк Base App — подпись смарт-аккаунта
+  // (ERC-1271), и её x402-фасилитатор не проверяет. Поэтому дело не в адресе
+  // и не в балансе, а в том, ЧЕМ подписано — и подсказываем именно это.
+  if (m.includes("signature") || m.includes("invalid") || m.includes("verification failed"))
+    return "этот кошелёк подписывает в формате, который сервис x402 не принимает. Открой апку в обычном браузере с MetaMask или Rabby — там проходит";
 
   // Ничего не распознали — показываем текст целиком, а не обрезанный кусок:
   // раньше обрезка на 60 символах отрезала ровно поле с причиной.
@@ -103,6 +108,7 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
   // с «Failed to fetch» уже ПОСЛЕ успешной подписи.
   async function x402(): Promise<boolean> {
     await ensureBase();
+
     // Берём клиент ПОСЛЕ переключения сети: хук ещё отдал бы старый,
     // и подпись ушла бы с чужим chainId.
     const wc = await getWalletClient(config, { chainId: base.id });

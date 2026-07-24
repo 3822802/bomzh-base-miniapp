@@ -11,7 +11,6 @@ import { useEnsureBase } from "@/lib/useBaseChain";
 import {
   CONTRACTS,
   BUILDER_DATA_SUFFIX,
-  X402_ENDPOINT,
   BUY_PAYMENT_WEI,
   GAS,
 } from "@/lib/constants";

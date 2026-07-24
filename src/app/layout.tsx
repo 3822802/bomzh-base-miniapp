@@ -20,10 +20,22 @@ const press = Press_Start_2P({
 const BASE_APP_ID =
   process.env.NEXT_PUBLIC_BASE_APP_ID ?? "6a61df15426d14cfbad57a59";
 
+// Подтверждение проекта на Talent Protocol (talent.app) — тем же способом:
+// сервис забирает страницу и ищет этот тег. Токен публичный по назначению
+// (он виден в исходнике страницы любому), секретом не является.
+const TALENT_VERIFICATION =
+  process.env.NEXT_PUBLIC_TALENT_VERIFICATION ??
+  "18ece4ad9c152aff1f5adcf83dcacdbfb79782d95d0ade6ccbabaad29324578d479c96a5a73d1536362c4e10080cae2e6b1174bde1acd16258fabbf2f4ed8b27";
+
 export const metadata: Metadata = {
   title: "Аирдроп Хантер",
   description: "Мини-апка на Base: ИИ-агент, токен BMZH и рулетка аирдропа.",
-  ...(BASE_APP_ID ? { other: { "base:app_id": BASE_APP_ID } } : {}),
+  other: {
+    ...(BASE_APP_ID ? { "base:app_id": BASE_APP_ID } : {}),
+    ...(TALENT_VERIFICATION
+      ? { "talentapp:project_verification": TALENT_VERIFICATION }
+      : {}),
+  },
 };
 
 // Мини-апка открывается во встроенном браузере кошелька: запрещаем зум

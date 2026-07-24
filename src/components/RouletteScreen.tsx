@@ -159,10 +159,10 @@ export function RouletteScreen({ onBack }: { onBack: () => void }) {
     <div className="nes-sky flex h-full flex-col">
       {/* Облака в процентах от высоты окна — чтобы держались на любом экране
           и не прятались за шапкой. */}
-      <span className="nes-cloud" style={{ top: "14%", left: "6%" }} />
-      <span className="nes-cloud" style={{ top: "20%", right: "8%" }} />
-      <span className="nes-cloud" style={{ top: "62%", left: "3%" }} />
-      <span className="nes-cloud" style={{ top: "70%", right: "4%" }} />
+      <span aria-hidden="true" className="nes-cloud" style={{ top: "14%", left: "6%" }} />
+      <span aria-hidden="true" className="nes-cloud" style={{ top: "20%", right: "8%" }} />
+      <span aria-hidden="true" className="nes-cloud" style={{ top: "62%", left: "3%" }} />
+      <span aria-hidden="true" className="nes-cloud" style={{ top: "70%", right: "4%" }} />
 
       <div className="shrink-0 px-4 pt-4">
         <Header />
@@ -177,6 +177,7 @@ export function RouletteScreen({ onBack }: { onBack: () => void }) {
         <div className="relative">
           <svg
             viewBox="0 0 40 40"
+            aria-hidden="true"
             className="absolute left-1/2 top-[-10px] z-10 w-8 -translate-x-1/2"
           >
             <polygon points="20,36 6,4 34,4" fill="#e03b30" stroke="#000" strokeWidth="3" />
@@ -185,7 +186,13 @@ export function RouletteScreen({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      <div className="relative z-10 mb-2 shrink-0 px-3 text-center text-[8px] leading-4 text-white [text-shadow:2px_2px_0_#000]">
+      {/* aria-live: статус меняется сам (подписал → ждём сеть → крутится →
+          выпало), и без этого скринридер о смене не сообщит. */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="relative z-10 mb-2 shrink-0 px-3 text-center text-[8px] leading-4 text-white [text-shadow:2px_2px_0_#000]"
+      >
         {status}
       </div>
 
@@ -206,7 +213,7 @@ export function RouletteScreen({ onBack }: { onBack: () => void }) {
         </button>
       </div>
 
-      <div className="nes-brick" />
+      <div aria-hidden="true" className="nes-brick" />
 
       {won !== null && (
         <Celebration prize={won} onClose={() => setWon(null)} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { PRIZES } from "./Wheel";
 
 // Хлопушка после прокрута: конфетти, выпавшая NFT и «YOU ARE ELIGIBLE».
@@ -17,15 +18,28 @@ export function Celebration({
 }) {
   const pr = PRIZES[prize - 1];
 
+  // Закрытие по Escape — базовое ожидание от любого модального окна.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <div
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="celebration-title"
       className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/75 p-5"
     >
-      {/* конфетти */}
+      {/* конфетти — чистая декорация, скрыта от скринридеров */}
       {Array.from({ length: COUNT }, (_, i) => (
         <span
           key={i}
+          aria-hidden="true"
           className="nes-confetti"
           style={{
             left: `${(i * 97) % 100}%`,
@@ -42,7 +56,10 @@ export function Celebration({
         onClick={(e) => e.stopPropagation()}
         className="nes-box relative z-10 w-full max-w-[300px] text-center"
       >
-        <p className="nes-pop text-[11px] leading-6 text-[#ffd93b]">
+        <p
+          id="celebration-title"
+          className="nes-pop text-[11px] leading-6 text-[#ffd93b]"
+        >
           YOU ARE
           <br />
           ELIGIBLE!
@@ -54,6 +71,8 @@ export function Celebration({
             так же, как на колесе, где кружки под миниатюрами белые. */}
         <div className="nes-frame mx-auto mt-3 w-[150px] bg-white p-2">
           <div
+            role="img"
+            aria-label={`NFT: ${pr.name}`}
             className="aspect-square w-full bg-contain bg-center bg-no-repeat"
             style={{ backgroundImage: `url(${pr.img})` }}
           />

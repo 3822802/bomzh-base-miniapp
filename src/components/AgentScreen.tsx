@@ -133,8 +133,9 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
       <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
         <Header />
 
-        {/* Реплика агента */}
-        <div className="nes-box shrink-0 text-[8px]">
+        {/* Реплика агента. aria-live — текст подменяется по ходу действия
+            (работаю → результат → причина ошибки), надо озвучивать. */}
+        <div role="status" aria-live="polite" className="nes-box shrink-0 text-[8px]">
           {busy
             ? "Секунду, работаю…"
             : reply ??
@@ -155,6 +156,8 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
             кадр виден целиком и без чёрных полей по краям рамки. */}
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <div
+            role="img"
+            aria-label="ИИ-агент Бомж"
             className="nes-frame w-full bg-contain bg-center bg-no-repeat"
             // Ширина — как у чёрных диалогов сверху и снизу, без своего
             // ограничения. Пропорции инлайном: утилита aspect-[…] с дробью

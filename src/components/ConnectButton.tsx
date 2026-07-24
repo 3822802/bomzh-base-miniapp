@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from "wagmi";
 import { base } from "wagmi/chains";
 
@@ -22,6 +22,16 @@ export function ConnectButton() {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const [open, setOpen] = useState(false);
+
+  // Escape закрывает выбор кошелька.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const cls =
     "nes-btn !px-3 !py-2 shrink-0 text-[7px] leading-4 whitespace-nowrap";
@@ -83,13 +93,18 @@ export function ConnectButton() {
       {open && (
         <div
           onClick={() => setOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="wallet-picker-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
         >
           <div
             onClick={(e) => e.stopPropagation()}
             className="nes-box max-h-[80dvh] w-full max-w-[300px] overflow-y-auto text-[8px]"
           >
-            <p className="mb-2 leading-5">ЧЕМ ПОДКЛЮЧИТЬСЯ?</p>
+            <p id="wallet-picker-title" className="mb-2 leading-5">
+              ЧЕМ ПОДКЛЮЧИТЬСЯ?
+            </p>
             {list.map((c) => (
               <button
                 key={c.uid}

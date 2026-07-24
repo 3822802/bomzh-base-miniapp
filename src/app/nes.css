@@ -78,6 +78,16 @@
 .nes-btn-blue { background: #4a7fd4; }
 .nes-btn-red { background: #d4483f; }
 
+/* Видимый фокус для клавиатуры. Без этого пройти апку с клавиатуры можно,
+   но не видно, где ты находишься. :focus-visible — только для клавиатуры,
+   мышью обводка не появляется и вид не портится. */
+.nes-btn:focus-visible,
+.nes-card:focus-visible,
+.nes-menu-item:focus-visible {
+  outline: 4px solid #ffd93b;
+  outline-offset: 3px;
+}
+
 /* Небо с облаками */
 .nes-sky {
   background-color: var(--sky);

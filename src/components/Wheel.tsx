@@ -45,6 +45,12 @@ export function Wheel({ rot, spinning }: { rot: number; spinning: boolean }) {
   return (
     <svg
       viewBox="0 0 336 336"
+      role="img"
+      aria-label={
+        spinning
+          ? "Колесо аирдропа крутится"
+          : "Колесо аирдропа: восемь секторов с призами"
+      }
       className="w-full"
       // Ширину ограничиваем и по высоте экрана: на низких телефонах колесо
       // ужимается само и не выталкивает кнопки за пределы окна.

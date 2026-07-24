@@ -44,9 +44,10 @@ const FALLBACK: Record<Status, string> = {
 
 export async function POST(req: NextRequest) {
   // Защита платного ключа Anthropic: каждый вызов маршрута — платный запрос
-  // к модели. 20 обращений в минуту с одного IP хватает живому человеку
-  // (кнопок всего две) и рубит автоматический флуд.
-  const limited = rateLimit(req, "agent", 20, 60_000);
+  // к модели. Лимит намеренно щедрый — он не должен мешать НИКОМУ из живых
+  // пользователей (кнопок всего две, руками столько не нажать), его задача —
+  // отсечь только автоматический флуд в тысячи запросов.
+  const limited = rateLimit(req, "agent", 300, 60_000);
   if (limited) return limited;
 
   let status: Status | null = null;

@@ -41,7 +41,8 @@ async function forward(payment: string | null) {
 
 export async function GET(req: NextRequest) {
   // Не даём гонять свой сервер как безымянный релей к апстриму.
-  const limited = rateLimit(req, "x402", 30, 60_000);
+  // Порог с большим запасом: живому пользователю его не достичь.
+  const limited = rateLimit(req, "x402", 300, 60_000);
   if (limited) return limited;
 
   try {

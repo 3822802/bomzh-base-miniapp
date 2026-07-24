@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Несколько пушей подряд — гоняем только последний, предыдущие отменяем.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Линт и сборка
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node 22 + кэш npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      # Ключ Anthropic намеренно НЕ передаём: сборка обязана проходить без него.
+      # Агент в этом случае отдаёт заготовленные фразы — это штатное поведение.
+      - name: Сборка
+        run: npm run build

@@ -28,8 +28,11 @@ const TALENT_VERIFICATION =
   "18ece4ad9c152aff1f5adcf83dcacdbfb79782d95d0ade6ccbabaad29324578d479c96a5a73d1536362c4e10080cae2e6b1174bde1acd16258fabbf2f4ed8b27";
 
 export const metadata: Metadata = {
-  title: "Аирдроп Хантер",
-  description: "Мини-апка на Base: ИИ-агент, токен BMZH и рулетка аирдропа.",
+  title: "Bomzh Hunter",
+  // Тот же текст, что подан в карточку апки на Base.dev — держим одинаковым,
+  // чтобы в сторе и в браузере апка называлась и описывалась одинаково.
+  description:
+    "Bomzh Hunter: a retro Dendy-style mini-app on Base. FARM to buy BMZH and tap x402. AIRDROP to spin the wheel and win NFTs. Fully onchain.",
   other: {
     ...(BASE_APP_ID ? { "base:app_id": BASE_APP_ID } : {}),
     ...(TALENT_VERIFICATION

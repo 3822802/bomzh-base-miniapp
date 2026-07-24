@@ -10,9 +10,9 @@ export function Header({ dark }: { dark?: boolean }) {
           dark ? "text-black" : "nes-title-sm text-white"
         }`}
       >
-        АИРДРОП
+        BOMZH
         <br />
-        ХАНТЕР
+        HUNTER
       </h1>
       <ConnectButton />
     </header>

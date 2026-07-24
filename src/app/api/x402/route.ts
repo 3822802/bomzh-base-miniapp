@@ -23,6 +23,15 @@ async function forward(payment: string | null) {
   });
 
   const body = await upstream.text();
+
+  // Первый 402 — это штатный «счёт» на оплату, он всегда приходит.
+  // А вот 402 в ответ на запрос С подписью означает, что платёж отвергли:
+  // это уже настоящая ошибка, и её причину пишем в лог сервера целиком —
+  // в UI она обрезалась ровно на самом полезном месте.
+  if (payment && !upstream.ok) {
+    console.error("x402: платёж отвергнут апстримом", upstream.status, body);
+  }
+
   const res = new NextResponse(body, {
     status: upstream.status,
     headers: {

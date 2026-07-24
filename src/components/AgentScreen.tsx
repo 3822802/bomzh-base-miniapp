@@ -20,12 +20,26 @@ type Status = "buy_ok" | "buy_fail" | "x402_ok" | "x402_fail";
 
 // Короткая понятная причина вместо простыни из кошелька.
 function reason(e: unknown): string {
-  const m = (e instanceof Error ? e.message : String(e)).toLowerCase();
+  const raw = e instanceof Error ? e.message : String(e);
+  const m = raw.toLowerCase();
+
   if (m.includes("user rejected") || m.includes("denied")) return "отмена в кошельке";
   if (m.includes("insufficient funds")) return "не хватает ETH на газ";
   if (m.includes("chain") && m.includes("match")) return "кошелёк не в сети Base";
   if (m.includes("insufficient") && m.includes("balance")) return "не хватает USDC";
-  return (e instanceof Error ? e.message : String(e)).slice(0, 90);
+
+  // Типичные отказы x402: подпись живёт ограниченное время и одноразовая,
+  // поэтому «просрочено» и «повтор» лечатся просто повторным нажатием.
+  if (m.includes("expired") || m.includes("validbefore"))
+    return "подпись просрочена — нажми ещё раз";
+  if (m.includes("nonce") || m.includes("already used"))
+    return "подпись уже использована — нажми ещё раз";
+  if (m.includes("signature") || m.includes("invalid"))
+    return "кошелёк подписал в формате, который сервис не принял";
+
+  // Ничего не распознали — показываем текст целиком, а не обрезанный кусок:
+  // раньше обрезка на 60 символах отрезала ровно поле с причиной.
+  return raw;
 }
 
 // Экран ФАРМ. Ровно два действия, поля ввода нет.
@@ -98,8 +112,22 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
     >[1];
     const res = await wrapFetchWithPayment(fetch, signer)("/api/x402");
     if (!res.ok) {
+      // Достаём именно поле с причиной, а не первые 60 символов сырого JSON:
+      // раньше обрезка приходилась ровно на "reason", и было не понять, что не так.
+      // Тело читаем ОДИН раз — повторный res.json()/res.text() бросил бы
+      // "body already read" и подменил настоящую ошибку своей.
       const body = await res.text().catch(() => "");
-      throw new Error(`сервер ответил ${res.status} ${body.slice(0, 60)}`);
+      let detail = body.slice(0, 160);
+      try {
+        const j = JSON.parse(body) as Record<string, unknown>;
+        const fields = [j.reason, j.error, j.message].filter(
+          (v): v is string => typeof v === "string" && v.length > 0
+        );
+        if (fields.length) detail = fields.join(" · ");
+      } catch {
+        /* не JSON — оставляем сырой текст */
+      }
+      throw new Error(detail || `сервер ответил ${res.status}`);
     }
     return true;
   }
@@ -146,7 +174,10 @@ export function AgentScreen({ onBack }: { onBack: () => void }) {
             </div>
           )}
           {detail && !busy && (
-            <div className="mt-1 text-[7px] leading-4 text-[#ff9a9a]">
+            // Причина может быть длинной и без пробелов (JSON, адреса) —
+            // break-words не даёт ей распереть блок за края экрана,
+            // max-h со скроллом не даёт вытеснить картинку агента.
+            <div className="mt-1 max-h-24 overflow-y-auto text-[7px] leading-4 break-words text-[#ff9a9a]">
               ({detail})
             </div>
           )}

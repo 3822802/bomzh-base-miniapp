@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bomzh Hunter
 
-## Getting Started
+Ретро мини-апка на **Base** в стиле Dendy. Два режима: **ФАРМ** — покупка токена
+BMZH и касание x402; **АИРДРОП** — колесо, которое выдаёт NFT прямо в кошелёк.
+Всё ончейн.
 
-First, run the development server:
+Живая версия: <https://bomzh-base-miniapp.vercel.app>
+
+## Как устроено
+
+| Экран | Что делает |
+|---|---|
+| **Главная** | две кнопки-карточки: ФАРМ и АИРДРОП |
+| **ФАРМ** | ИИ-агент с ровно двумя действиями: купить 1000 BMZH, коснуться x402 |
+| **АИРДРОП** | колесо на 8 секторов; CLAIM подписывает транзакцию, NFT минтится в ней же |
+
+### Про ИИ-агента
+
+Агент намеренно **лишён любых полномочий**: у модели нет инструментов, она не
+получает пользовательский текст и не может ничего инициировать. Действия
+выполняет обычный код детерминированно, а модель только озвучивает готовый
+результат одной фразой. Поэтому prompt injection здесь невозможен —
+подать произвольный текст просто некуда.
+
+### Про колесо
+
+Приз берётся из события `Spun` в квитанции транзакции, а не из кэша `nextPrize`.
+Поэтому анимация всегда совпадает с тем, что реально сминтилось: колесо
+физически не может показать не тот приз.
+
+## Контракты (Base mainnet)
+
+Все верифицированы на Basescan (Exact Match) и на Sourcify.
+
+| Контракт | Адрес |
+|---|---|
+| BMZH (токен B20) | `0xB200000000000000000000873a5F3745D420D7C9` |
+| BomzhSale | `0x362e59F89b46C685AD47CE76e4399EDBF1a09273` |
+| BomzhRoulette | `0x87e546A90E5a0E69048068f08c433679BE25643a` |
+| BomzhB20Factory | `0x477Eb694f91E058B68dd6Bb3E303d91917196e52` |
+| Приз 1 · TIER 1 | `0x5933dd22E94095BCa20E7E045D119a70e64315ba` |
+| Приз 2 · TIER 2 | `0xD436dc7d443B5408B88B4DFd9c57697099818113` |
+| Приз 3 · TIER 3 | `0xa3dbCc441D267b20695218413aBaEe96a6528D69` |
+| Приз 4 · Подарок | `0xBA35B3F48a6887050A3149C00DBf6237FACf93d6` |
+
+Токен BMZH — это **B20**: надстройка над ERC-20, работающая нативным
+прекомпайлом. Снаружи ведёт себя как обычный ERC-20, но исходника у него нет,
+поэтому верифицировать его нечем и не нужно.
+
+## Стек
+
+- Next.js 16 (App Router) + React 19 + Tailwind v4
+- wagmi v2 + viem v2 + `@base-org/account`
+- `x402-fetch` для микроплатежей x402
+- Anthropic SDK (Haiku) — только для реплик агента
+
+Farcaster/MiniKit не используются: с 9 апреля 2026 Base App считает апки
+обычными веб-приложениями.
+
+## Запуск
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Открыть <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Переменные окружения — в `.env.local` (см. `.env.local.example`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Переменная | Обязательна | Зачем |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | нет | живые реплики агента; без неё — заготовленные фразы |
 
-## Learn More
+Приватный ключ кошелька в проекте **не используется нигде** — все транзакции
+подписываются в кошельке пользователя.
 
-To learn more about Next.js, take a look at the following resources:
+## Скрипты
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev      # разработка
+npm run build    # продакшен-сборка
+npm run lint     # eslint
+npm test         # юнит-тесты
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Атрибуция билдера
 
-## Deploy on Vercel
+К транзакциям `buy`, `approve` и `spin` приклеивается ERC-8021 data suffix
+с билдер-кодом `bc_892znyoo` — по нему Base засчитывает активность апке.
+Код и суффикс лежат в одном месте: `src/lib/constants.ts`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Лицензия
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
